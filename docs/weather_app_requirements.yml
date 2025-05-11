@@ -1,0 +1,151 @@
+# Weather Forecast Web App Requirements
+
+# 保存場所: docs/weather_app_requirements.yml
+# ファイル名: weather_app_requirements.yml
+
+metadata:
+  version: 1.2.0
+  last_updated: 2025-04-27
+  author: プロジェクトチーム
+  environment:
+    node_version: ">=18.0.0"
+    npm_scripts:
+      - start: "vite"
+      - build: "vite build"
+      - test: "vitest --coverage"
+  # ci_cd:
+  #   github_actions:
+  #     workflow_file: .github/workflows/ci.yml
+  #     workflow: |
+  #       name: CI
+  #       on: [push, pull_request]
+  #       jobs:
+  #         build_and_test:
+  #           runs-on: ubuntu-latest
+  #           steps:
+  #             - uses: actions/checkout@v3
+  #             - name: Use Node.js
+  #               uses: actions/setup-node@v3
+  #               with:
+  #                 node-version: '18'
+  #             - name: Install Dependencies
+  #               run: npm ci
+  #             - name: Lint (ESLint + Prettier)
+  #               run: npm run lint
+  #             - name: Type Check (tsc strict)
+  #               run: npm run type-check
+  #             - name: Run Unit & Integration Tests
+  #               run: npm test
+  #             - name: Enforce Coverage
+  #               run: npm run test -- --coverage --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}'
+  #             - name: Run E2E Tests (Playwright)
+  #               run: npx playwright test
+  #             - name: Build (Vite)
+  #               run: npm run build
+
+overview:
+  description: |
+    React＋TypeScript＋Tailwind＋Vite を用いた学習用天気予報 Web アプリ。
+    住所入力または Geolocation API で取得した座標を用い、Nominatim → Open-Meteo の流れで
+    天気情報（現在・7日間・24時間タイムライン）を取得・表示。
+    お気に入り機能、ユーザー設定、アクセシビリティ、セキュリティに配慮。
+
+functional_requirements:
+  - geolocation: ...  # 省略（既存定義準拠）
+  - search_geocode: ...
+  - weather_fetch: ...
+
+non_functional_requirements:
+  quality:
+    linting: ESLint + Prettier
+    type_check: tsc strict mode
+    testing:
+      framework:
+        - Vitest + Testing Library
+        - Playwright for E2E
+      coverage_threshold: 80%
+      strategy:
+        unit:
+          scope: [domain, application, infrastructure]
+        integration:
+          scope: [presentation + services]
+        e2e:
+          scope: [検索→結果表示, お気に入り追加→削除]
+  caching:
+    strategy: React Query (TanStack Query)
+    short_term:
+      storage: sessionStorage
+      stale_time: 5 minutes
+    long_term:
+      storage: IndexedDB
+      cache_time: 7 days
+  accessibility:
+    standards: WCAG 2.1 AA
+    checklist:
+      - キーボード操作: Tab順, Enter/Esc動作
+      - スクリーンリーダー: aria-label, role属性
+      - 代替テキスト: img alt
+      - コントラスト比: >=4.5:1
+      - フォーカスインジケータ: visible
+    tooling:
+      axe_core:
+        usage: "npx axe src --output=reports/a11y-report.json"
+  performance:
+    lazy_loading:
+      - ForecastChart
+      - WeatherCard
+      - FavoritesSidebar
+    code_splitting: React.lazy + Suspense
+    build_optimization: Vite
+  security:
+    security_txt:
+      path: docs/security.txt
+      content: |
+        Contact: security@example.com
+        Expires: 2025-12-31
+    cors:
+      origin_whitelist:
+        - https://example.com
+        - https://app.example.com
+    env_variables:
+      - .env (dotenv, never commit secrets)
+    headers:
+      - Cache-Control
+      - Content-Security-Policy
+
+tech_stack:
+  build_tool: Vite (React + TypeScript)
+  framework: React 18
+  language: TypeScript 5.x
+  styling: Tailwind CSS (@tailwindcss/vite)
+  http_client:
+    primary: Fetch API wrapper + React Query
+
+architecture:
+  pattern: Clean Architecture (Onion)
+  layers: ...  # 省略（既存定義準拠）
+  grouping: feature-based (src/features/{feature}/...)
+
+state_management:
+  local_ui:
+    description: コンポーネント内状態は useState/useReducer
+    libraries: [useState, useReducer]
+  global_app_state:
+    description: 軽量グローバル状態管理に Zustand を採用
+    choice_rationale: |
+      - Reduxと比較してボイラープレートが少ない
+      - Jotaiよりシンプルでパフォーマンス良好
+    primary: Zustand
+  server_state:
+    description: サーバー同期データ管理に React Query を採用
+    choice_rationale: |
+      - SWRより高度なキャッシュ制御・ミューテーション管理
+      - DevToolsで状態可視化可能
+    primary: React Query
+  complex_flows:
+    description: 複雑フロー制御に XState を利用
+    libraries: [XState]
+
+api_requirements:
+  nominatim: ...
+  open_meteo: ...
